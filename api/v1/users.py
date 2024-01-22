@@ -7,7 +7,7 @@ from api.dependencies import get_users_service
 from api.dependencies_user import get_current_user, validate_token
 from models.user import Roles
 
-from schemas.user import UserListResponse, UserNotFoundException, \
+from schemas.users.user import UserListResponse, UserNotFoundException, \
     UsersNotFoundException, UserInfo, RoleNotFoundException, \
     UserRole, UserUpdateRequest, UserExistsException
 
@@ -16,7 +16,12 @@ from services.users_service import UsersService
 router = APIRouter()
 
 
-@router.post("/all", status_code=status.HTTP_200_OK)
+@router.get("/me", status_code=status.HTTP_200_OK)
+async def get_me(current_user: UserInfo = Depends(get_current_user)) -> UserInfo:
+    return current_user
+
+
+@router.get("/", status_code=status.HTTP_200_OK)
 async def get_all_users(user_service: Annotated[UsersService, Depends(get_users_service)],
                         current_user: UserRole = Depends(validate_token)) -> UserListResponse:
     try:
@@ -87,17 +92,28 @@ async def get_user(user_id: uuid.UUID, user_service: Annotated[UsersService, Dep
                             detail="User not found" + str(error)) from error
 
 
-@router.post("/me", status_code=status.HTTP_200_OK)
-async def get_me(current_user: UserInfo = Depends(get_current_user)) -> UserInfo:
-    return current_user
-
-
-@router.put("/{user_id}", status_code=status.HTTP_200_OK)
-async def update_user(update_user: UserUpdateRequest,
-                      user_service: Annotated[UsersService, Depends(get_users_service)]):
+@router.put("/", status_code=status.HTTP_200_OK)
+async def update_user(update_user_: UserUpdateRequest,
+                      user_service: Annotated[UsersService, Depends(get_users_service)], current_user: UserInfo = Depends(get_current_user)):
     try:
-        await user_service.update_user(update_user=update_user)
+
+        await user_service.update_user(update_user=update_user_)
         return status.HTTP_200_OK
     except UserExistsException as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                             detail="User exists" + str(exc)) from exc
+
+
+@router.delete('/{user_id}', status_code=status.HTTP_200_OK)
+async def delete_user(user_id: uuid.UUID, user_service: Annotated[UsersService, Depends(get_users_service)],
+                      current_user: UserInfo = Depends(get_current_user)):
+
+    try:
+        if (current_user.id != user_id) or (current_user.role != Roles.ADMIN):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail="You are not allowed to delete this profile")
+        await user_service.delete_user(user_id)
+        return status.HTTP_200_OK
+    except:
+        pass
+

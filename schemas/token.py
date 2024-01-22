@@ -26,7 +26,7 @@ Fields:
 from pydantic import BaseModel
 
 
-class Token(BaseModel):
+class TokensPair(BaseModel):
     """
     Модель токена.
 

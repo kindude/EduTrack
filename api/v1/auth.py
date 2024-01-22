@@ -1,19 +1,41 @@
-from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException
-from starlette import status
-from api.dependencies import get_auth_service
-from schemas.token import Token, TokenRefreshNotFoundException
-from schemas.user import UserAddRequest, UserExistsException, UserLogin, \
-    WrongPasswordException, UserNotFoundException
-from services.auth_service import AuthService
+"""
+Модуль для обработки регистрации, аутентификации и обновления токенов пользователей.
 
+Этот модуль предоставляет роутер FastAPI для выполнения операций,
+    связанных с регистрацией пользователей, их аутентификацией и обновлением токенов.
+
+"""
+
+from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException, Response, Cookie
+from starlette import status
+
+from api.dependencies import get_auth_service
+from schemas.access_token import AccessToken
+from schemas.token import TokenRefreshNotFoundException, TokenExpiredException, TokenCorruptedException
+from schemas.users.user import UserAddRequest, UserExistsException, UserLogin, WrongPasswordException, UserNotFoundException
+from services.auth_service import AuthService
 
 router = APIRouter()
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register_user(auth_service: Annotated[AuthService, Depends(get_auth_service)],
-                        user_add: UserAddRequest):
+                        user_add: UserAddRequest) -> int:
+    """
+    Регистрирует нового пользователя.
+
+        Args:
+            auth_service (AuthService): Сервис для работы с авторизациями.
+            user_add (UserAddRequest): Данные нового пользователя.
+
+        Returns:
+            int: Код статуса HTTP 201 Created при успешной регистрации.
+
+        Raises:
+            HTTPException: HTTP 409 Conflict, если пользователь уже существует.
+    """
+
     try:
         await auth_service.register_user(user_add=user_add)
         return status.HTTP_201_CREATED
@@ -25,9 +47,33 @@ async def register_user(auth_service: Annotated[AuthService, Depends(get_auth_se
 
 @router.post("/login", status_code=status.HTTP_200_OK)
 async def login_user(auth_service: Annotated[AuthService, Depends(get_auth_service)],
-                     user_login: UserLogin) -> Token:
+                     user_login: UserLogin,
+                     response: Response) -> AccessToken:
+    """
+
+    Аутентифицирует пользователя.
+
+        Args:
+            auth_service (AuthService): Сервис для работы с авторизациями.
+            user_login (UserLogin): Данные для входа пользователя.
+            response (Response): Объект ответа для установления cookies.
+
+        Returns:
+            TokensPair: Токен для аутентификации пользователя.
+
+        Raises:
+            HTTPException: HTTP 401 Unauthorized, если аутентификация не удалась.
+            HTTPException: HTTP 404 Unauthorized, если пользователь не найден.
+
+    """
+
     try:
-        return await auth_service.login(user_login)
+        tokens_pair = await auth_service.login(user_login)
+        response.set_cookie(key='refresh_token',
+                            value=tokens_pair.refresh_token,
+                            httponly=True)
+        access_token = AccessToken(token=tokens_pair.access_token, type=tokens_pair.type)
+        return access_token
     except WrongPasswordException as error:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Wrong password" + str(error)) from error
@@ -36,12 +82,70 @@ async def login_user(auth_service: Annotated[AuthService, Depends(get_auth_servi
                             detail="User not found" + str(error)) from error
 
 
-@router.post("/refresh", status_code=status.HTTP_200_OK)
-async def refresh(request: Token, auth_service: Annotated[AuthService,
-                                                Depends(get_auth_service)]) -> Token:
+@router.post("/logout", status_code=status.HTTP_200_OK)
+async def logout_user(auth_service: Annotated[AuthService, Depends(get_auth_service)], response: Response,
+                      refresh_token: Annotated[str | None, Cookie()] = None) -> Response:
+    """
+    Заканчивает сессию пользователя.
+
+        :param auth_service: Сервис для работы с авторизациями.
+        :param refresh_token: Токен обновления пользователя из куки.
+        :return: Код статуса HTTP 200 OK при успешном выходе из сессии.
+        :raise: HTTPException: HTTP 401 Unauthorized, если токен обновления не найден или его срок действия истёк.
+    """
+
     try:
-        return await auth_service.refresh(request)
+        response.delete_cookie('refresh_token')
+        await auth_service.logout(refresh_token)
+        response.status_code = 200
+        return response
     except TokenRefreshNotFoundException as error:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Token not found, log in again",
                             headers=auth_service.http_headers.WWW_AUTHENTICATE_BEARER) from error
+    except TokenExpiredException as error:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Token has expired, log in again",
+                            headers=auth_service.http_headers.WWW_AUTHENTICATE_BEARER) from error
+
+
+@router.post("/refresh", status_code=status.HTTP_200_OK)
+async def refresh(auth_service: Annotated[AuthService, Depends(get_auth_service)],
+                  response: Response,
+                  refresh_token: Annotated[str | None, Cookie()] = None) -> AccessToken:
+    """
+    Обновляет токен пользователя для продления срока его действия.
+
+        Args:
+            refresh_token (str): Токен обновления пользователя из куки.
+            auth_service (AuthService): Сервис для работы с авторизациями.
+            response (Response): Объект ответа для установления cookies.
+
+        Returns:
+            TokensPair: Обновленный токен доступа.
+
+        Raises:
+            HTTPException: HTTP 401 Unauthorized, если токен обновления не найден или его срок действия истёк.
+    """
+
+    try:
+        tokens_pair = await auth_service.refresh(refresh_token)
+        response.set_cookie(key='refresh_token',
+                            value=tokens_pair.refresh_token,
+                            httponly=True)
+        access_token = AccessToken(token=tokens_pair.access_token, type=tokens_pair.type)
+        return access_token
+    except TokenRefreshNotFoundException as error:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Token not found, log in again",
+                            headers=auth_service.http_headers.WWW_AUTHENTICATE_BEARER) from error
+    except TokenExpiredException as error:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Token has expired, log in again",
+                            headers=auth_service.http_headers.WWW_AUTHENTICATE_BEARER) from error
+
+    except TokenCorruptedException as error:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Token not found, log in again",
+                            headers=auth_service.http_headers.WWW_AUTHENTICATE_BEARER) from error
+

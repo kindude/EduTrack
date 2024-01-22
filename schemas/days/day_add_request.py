@@ -1,3 +1,4 @@
+import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -9,3 +10,4 @@ class DayAddRequest(BaseSchema):
     mark: Optional[float] = None
     user_id: UUID
     module_id: UUID
+    date: datetime.datetime

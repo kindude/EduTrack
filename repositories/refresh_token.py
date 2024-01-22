@@ -25,6 +25,8 @@ Methods:
 
 from typing import Union
 from redis import Redis
+
+from schemas.token import TokenRefreshNotFoundException
 from settings import JwtSettings
 
 settings = JwtSettings()
@@ -76,3 +78,21 @@ class RefreshTokenRepository:
 
         result = await self._redis.get(key)
         return result
+
+    async def get_items(self):
+        keys = [key.decode() for key in await self._redis.keys("*")]
+        results = {key: await self._redis.get(key) for key in keys}
+        return results
+
+    async def delete_item(self, key: str) -> None:
+        """
+        Удаляет элемент из хранилища кэша Redis по указанному ключу.
+
+        Args:
+            key (str): Ключ, по которому будет удалён элемент из кэша.
+        """
+
+        result = await self._redis.get(key)
+        if not result:
+            raise TokenRefreshNotFoundException
+        await self._redis.delete(key)

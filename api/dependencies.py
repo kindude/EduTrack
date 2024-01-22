@@ -12,12 +12,15 @@ from repositories.actions_repo import ActionsRepository
 from repositories.days_repository import DaysRepository
 from repositories.modules import ModulesRepository
 from repositories.db import get_async_session, get_redis_session
+from repositories.posts_repository import PostsRepository
 from repositories.refresh_token import RefreshTokenRepository
 from repositories.users import UsersRepository
 from services.actions_service import ActionsService
 from services.auth_service import AuthService
 from services.days_service import DaysService
 from services.modules_service import ModulesService
+from services.posts_service import PostsService
+from services.statistics_service import StatisticsService
 from services.users_service import UsersService
 
 
@@ -66,7 +69,9 @@ def get_modules_service(session: AsyncSession = Depends(get_async_session)) -> M
     """
 
     modules_repo = ModulesRepository(session=session)
-    return ModulesService(modules_repo=modules_repo)
+    actions_repo = ActionsRepository(session=session)
+
+    return ModulesService(modules_repo=modules_repo, actions_repo=actions_repo)
 
 
 def get_actions_service(session: AsyncSession = Depends(get_async_session)) -> ActionsService:
@@ -78,3 +83,15 @@ def get_actions_service(session: AsyncSession = Depends(get_async_session)) -> A
 def get_days_service(session: AsyncSession = Depends(get_async_session)) -> DaysService:
     days_repo = DaysRepository(session=session)
     return DaysService(days_repo=days_repo)
+
+
+def get_statistics_service(session: AsyncSession = Depends(get_async_session)) -> StatisticsService:
+    days_repo = DaysRepository(session=session)
+    return StatisticsService(days_repo=days_repo)
+
+
+def get_posts_service(session: AsyncSession = Depends(get_async_session)) -> PostsService:
+    posts_repo = PostsRepository(session=session)
+    return PostsService(posts_repo=posts_repo)
+
+

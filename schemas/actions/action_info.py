@@ -3,7 +3,7 @@ import uuid
 from models.user import Roles
 from schemas.base import BaseSchema
 from schemas.modules import ModuleInfo
-from schemas.user import UserInfo
+from schemas.users.user import UserInfo
 
 
 class ActionInfo(BaseSchema):

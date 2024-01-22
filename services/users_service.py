@@ -17,7 +17,7 @@ from sqlalchemy.exc import IntegrityError
 
 from helpers.password_helper import PasswordHelper
 from repositories.users import UsersRepository
-from schemas.user import UserListResponse, UserNotFoundException, \
+from schemas.users.user import UserListResponse, UserNotFoundException, \
     UsersNotFoundException, UserInfo, UserUpdateRequest, UserExistsException, User
 
 
@@ -111,7 +111,6 @@ class UsersService:
             id=update_user.id,
             first_name=update_user.first_name,
             last_name=update_user.last_name,
-            patronymic=update_user.patronymic,
             phone_number=update_user.phone_number,
             city=update_user.city,
             address=update_user.address,
@@ -123,3 +122,11 @@ class UsersService:
             await self.users_repo.update_user(user=user)
         except IntegrityError as error:
             raise UserExistsException from error
+
+    async def delete_user(self, user_id: uuid.UUID) -> None:
+        try:
+            await self.users_repo.delete_user(user_id)
+        except Exception as exc:
+            print(exc)
+
+

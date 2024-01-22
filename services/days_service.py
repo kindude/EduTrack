@@ -1,9 +1,12 @@
 import datetime
 import uuid
+from typing import List
 
 from repositories.days_repository import DaysRepository
 from schemas.days.day import Day
 from schemas.days.day_add_request import DayAddRequest
+from schemas.days.day_module import DayModule
+from schemas.users.user_marks import UserMarks
 
 
 class DaysService:
@@ -33,12 +36,14 @@ class DaysService:
             pass
 
 
-    async def get_days_by_user(self, user_id: uuid.UUID):
+    async def get_days_by_user(self, user_id: uuid.UUID) -> List[DayModule]:
         days = await self.days_repo.get_days_by_user_id(user_id)
         if not days:
             return []
-        else:
-            pass
+        return days
+
+    async def get_days_users(self) -> List[UserMarks]:
+        return await self.days_repo.get_days_users()
 
     def __to_DayInfo(self, day: Day):
         pass

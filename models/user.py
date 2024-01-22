@@ -16,6 +16,7 @@ class Roles(enum.Enum):
     MODERATOR = "MODERATOR"
 
 
+
 class UserDao(BaseModel):
 
     __tablename__ = "users"
@@ -29,7 +30,12 @@ class UserDao(BaseModel):
     email: Mapped[str] = mapped_column(String(100), unique=True)
     password_hash: Mapped[str] = mapped_column(String(300))
     role: Mapped[Enum] = mapped_column(Enum(Roles))
-
-    actions: Mapped[List["ActionDao"]] = relationship(back_populates="user")
-    days: Mapped[List["DayDao"]] = relationship(back_populates='user')
-
+    actions: Mapped[List["ActionDao"]] = relationship(
+        "ActionDao", back_populates="user", cascade="all, delete-orphan"
+    )
+    days: Mapped[List["DayDao"]] = relationship(
+        "DayDao", back_populates="user", cascade="all, delete-orphan"
+    )
+    posts: Mapped[List["PostDao"]] = relationship(
+        "PostDao", back_populates="author", cascade="all, delete-orphan"
+    )

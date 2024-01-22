@@ -23,8 +23,8 @@ Attributes:
 import uuid
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Type, List, Union
-from sqlalchemy import insert, select, update
+from typing import Any, Dict, Type, List, Union, Iterable
+from sqlalchemy import insert, select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from models.base import Base
 
@@ -94,7 +94,7 @@ class BaseRepository(ABC):
         item = await self.session.execute(stmt_to_select_one)
         return item.scalar_one_or_none()
 
-    async def _get_all(self) -> List[Base]:
+    async def _get_all(self) -> Iterable[Base]:
         """
         Получает список всех записей.
 
@@ -105,3 +105,12 @@ class BaseRepository(ABC):
         stmt_to_select_all = select(self.model)
         items = await self.session.execute(stmt_to_select_all)
         return items.scalars().all()
+
+    async def _delete(self, id: uuid.UUID) -> None:
+        try:
+            stmt_to_delete = delete(self.model).filter(self.model.id == id)
+            await self.session.execute(stmt_to_delete)
+            await self.session.commit()
+        except Exception as exc:
+            print(exc)
+

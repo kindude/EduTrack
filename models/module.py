@@ -19,3 +19,5 @@ class ModuleDao(BaseModel):
 
     actions: Mapped[List["ActionDao"]] = relationship(back_populates="module")
     days: Mapped[List["DayDao"]] = relationship(back_populates='module')
+    posts: Mapped[List["PostDao"]] = relationship(back_populates='module')
+

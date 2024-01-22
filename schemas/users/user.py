@@ -35,7 +35,6 @@ class UserInfo(BaseSchema):
     Attributes:
         first_name (str): Имя пользователя.
         last_name (str): Фамилия пользователя.
-        patronymic (str, optional): Отчество пользователя (необязательное поле).
         phone_number (PhoneNumber): Номер телефона пользователя.
         city (str): Город пользователя.
         address (str): Адрес пользователя.
@@ -43,6 +42,7 @@ class UserInfo(BaseSchema):
         role (str): Роль пользователя в системе.
     """
 
+    id: uuid.UUID
     first_name: constr(max_length=50, min_length=1)
     last_name: constr(max_length=50, min_length=1)
     phone_number: PhoneNumber
@@ -89,14 +89,19 @@ class User(UserInfo):
         from_attributes = True
 
 
-class UserAddRequest(UserInfo):
+class UserAddRequest(BaseSchema):
     """
     Модель запроса на добавление пользователя.
 
     Attributes:
         password (str): Пароль пользователя.
     """
-
+    first_name: constr(max_length=50, min_length=1)
+    last_name: constr(max_length=50, min_length=1)
+    phone_number: PhoneNumber
+    city: constr(max_length=50, min_length=1)
+    address: constr(max_length=50, min_length=5)
+    email: EmailStr
     password: constr(max_length=300, min_length=8)
 
     class Config:
@@ -120,7 +125,6 @@ class UserUpdateRequest(BaseModel):
         id (uuid.UUID): Уникальный идентификатор пользователя.
         first_name (str): Имя пользователя.
         last_name (str): Фамилия пользователя.
-        patronymic (str, optional): Отчество пользователя (необязательное поле).
         phone_number (PhoneNumber): Номер телефона пользователя.
         password (str): Пароль пользователя.
         city (str): Город пользователя.

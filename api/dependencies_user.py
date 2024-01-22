@@ -16,18 +16,10 @@ from constants.http_headers import HttpHeaders
 from repositories.db import get_redis_session, get_async_session
 from repositories.refresh_token import RefreshTokenRepository
 from repositories.users import UsersRepository
-from schemas.token import Token, TokenUserNotFoundException, TokenExpiredException, TokenCorruptedException
-from schemas.user import UserRole, UserInfo
+from schemas.token import TokenUserNotFoundException, TokenExpiredException, TokenCorruptedException
+from schemas.users.user import UserRole, UserInfo
 from services.token import JwtProcessorSingleton
 
-
-# from repositories.db import get_async_session, get_redis_session
-# from repositories.refresh_token import RefreshTokenRepository
-# from repositories.users import UsersRepository
-# from schemas.token import Token, TokenUserNotFoundException, TokenExpiredException, \
-#     TokenCorruptedException
-# from schemas.users import UserInfo, UserRole
-# from services.token import JwtProcessorSingleton
 
 
 def get_refresh_redis_repo(redis_session: Redis = Depends(get_redis_session)
@@ -62,7 +54,7 @@ def get_users_repo(session: AsyncSession = Depends(get_async_session)) -> UsersR
 http_bearer = HTTPBearer()
 
 
-def validate_token(access_token: HTTPAuthorizationCredentials = Depends(http_bearer), users_repo: UsersRepository = Depends(get_users_repo)
+def validate_token(token: HTTPAuthorizationCredentials = Depends(http_bearer), users_repo: UsersRepository = Depends(get_users_repo)
                    ) -> UserRole:
     """
     Декодирует и обрабатывает JWT-токен.
@@ -81,14 +73,15 @@ def validate_token(access_token: HTTPAuthorizationCredentials = Depends(http_bea
     """
 
     try:
-        if access_token is None:
+        if token is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                 detail="Authorization header is missing",
                                 headers=HttpHeaders.WWW_AUTHENTICATE_BEARER)
 
-        token = access_token.credentials
+        token = token.credentials
         jwt_processor = JwtProcessorSingleton(session=users_repo.session)
         user = jwt_processor.access_jwt_processor.decode(token=token)
+
         return user
     except TokenUserNotFoundException as error:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
@@ -123,6 +116,4 @@ async def get_current_user(user: UserRole = Depends(validate_token),
     Returns:
         UserInfo: Информация о текущем пользователе.
     """
-
     return await users_repo.get_user(user_id=user.user_id)
-

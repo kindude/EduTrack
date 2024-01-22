@@ -15,7 +15,7 @@ from starlette import status
 
 from repositories.users import UsersRepository
 from schemas.token import TokenExpiredException, TokenCorruptedException
-from schemas.user import UserRole
+from schemas.users.user import UserRole
 from settings import JwtSettings
 
 settings = JwtSettings()
@@ -89,12 +89,11 @@ class JwtProcessor:
         """
         Декодирование токена.
 
-        Args:
-            token (str): Токен для декодирования.
-
-        Returns:
-            UserRole: Модель из словаря или None,
-                если декодирование не удалось.
+            :param token: Токен для декодирования.
+            :return: Модель из словаря или None, если декодирование не удалось.
+            :raise:
+                TokenExpiredException, если токен истек.
+                TokenCorruptedException, если токен поврежден.
         """
 
         try:

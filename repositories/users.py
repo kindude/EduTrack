@@ -24,7 +24,7 @@ from sqlalchemy import select, update
 
 from models.user import UserDao, Roles
 from repositories.base import BaseRepository
-from schemas.user import User, UserListResponse, UserInfo, RoleNotFoundException, UserUpdateRequest
+from schemas.users.user import User, UserListResponse, UserInfo, RoleNotFoundException
 
 
 class UsersRepository(BaseRepository):
@@ -58,7 +58,7 @@ class UsersRepository(BaseRepository):
         """
 
         users = await self._get_all()
-        users = [UserInfo.from_orm(user) for user in users]
+        users = [UserInfo.model_validate(user) for user in users]
         return UserListResponse(users=users)
 
     async def get_users_by_role(self, role: str) -> Union[UserListResponse, None]:
@@ -100,7 +100,7 @@ class UsersRepository(BaseRepository):
 
         user = await self._get(_id=user_id)
         user.role = user.role.value
-        return UserInfo.from_orm(user)
+        return UserInfo.model_validate(user)
 
     async def get_by_email(self, email: str) -> Union[UserDao, None]:
         """
@@ -128,3 +128,9 @@ class UsersRepository(BaseRepository):
         stmt_to_update_user = update(self.model).values(user.model_dump()).filter(UserDao.email == user.email)
         await self.session.execute(stmt_to_update_user)
         await self.session.commit()
+
+    async def delete_user(self, user_id: uuid.UUID) -> None:
+        try:
+            await self._delete(user_id)
+        except Exception as exc:
+            print(exc)
