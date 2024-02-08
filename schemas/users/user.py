@@ -96,6 +96,7 @@ class UserAddRequest(BaseSchema):
     Attributes:
         password (str): Пароль пользователя.
     """
+
     first_name: constr(max_length=50, min_length=1)
     last_name: constr(max_length=50, min_length=1)
     phone_number: PhoneNumber

@@ -64,7 +64,7 @@ async def get_module_days(id: uuid.UUID, days_service: Annotated[DaysService, De
 
 
 @router.get('/user/{id}/marks', status_code=status.HTTP_200_OK)
-async def get_user_days(id: uuid.UUID, days_service: Annotated[DaysService, Depends(get_days_service)]) -> List[DayModule]:
+async def get_user_days(id: uuid.UUID, days_service: Annotated[DaysService, Depends(get_days_service)]) -> List[UserMarks]:
     try:
         return await days_service.get_days_by_user(id)
     except:
@@ -75,5 +75,12 @@ async def get_user_days(id: uuid.UUID, days_service: Annotated[DaysService, Depe
 async def get_users_days(days_service: Annotated[DaysService, Depends(get_days_service)]) -> List[UserMarks]:
     try:
         return await days_service.get_days_users()
+    except:
+        pass
+
+@router.get('/users/marks/{teacher_id}', status_code=status.HTTP_200_OK)
+async def get_users_days_by_teacher_id(teacher_id: uuid.UUID, days_service: Annotated[DaysService, Depends(get_days_service)]) -> List[UserMarks]:
+    try:
+        return await days_service.get_days_by_teacher(teacher_id=teacher_id)
     except:
         pass

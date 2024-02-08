@@ -16,7 +16,9 @@ from typing import Union
 from sqlalchemy.exc import IntegrityError
 
 from helpers.password_helper import PasswordHelper
+from repositories.images_repo import ImagesRepository
 from repositories.users import UsersRepository
+from schemas.images.image_add_request import ImageAddRequest
 from schemas.users.user import UserListResponse, UserNotFoundException, \
     UsersNotFoundException, UserInfo, UserUpdateRequest, UserExistsException, User
 
@@ -28,7 +30,7 @@ class UsersService:
         users_repo (UsersRepository): Репозиторий для пользователей.
     """
 
-    def __init__(self, users_repo: UsersRepository):
+    def __init__(self, users_repo: UsersRepository, images_repo: ImagesRepository):
         """
         Инициализация сервиса.
 
@@ -37,6 +39,7 @@ class UsersService:
         """
 
         self.users_repo = users_repo
+        self.images_repo = images_repo
         self.password_helper = PasswordHelper()
 
     async def get_users(self) -> UserListResponse:
@@ -122,6 +125,9 @@ class UsersService:
             await self.users_repo.update_user(user=user)
         except IntegrityError as error:
             raise UserExistsException from error
+
+    async def add_image(self, image_add_request: ImageAddRequest):
+        await self.images_repo.add_image(image_add=image_add_request)
 
     async def delete_user(self, user_id: uuid.UUID) -> None:
         try:

@@ -35,9 +35,10 @@ class ModulesService:
 
         modules = await self.modules_repo.get_all()
         modules_with_lecturer = []
+
         for module in modules:
             user = await self.actions_repo.get_action_by_module_id(module_id=module.id)
-            if user is not 'N/A':
+            if user != 'N/A':
                 modules_with_lecturer.append(ModuleUsers(
                     module=module,
                     users=[user]
@@ -48,10 +49,6 @@ class ModulesService:
                     users='N/A'
                 ))
         return modules_with_lecturer
-
-
-
-
 
 
     # async def get_module(self, module_alias: str) -> ModuleInfo:

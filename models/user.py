@@ -5,7 +5,7 @@ from uuid import UUID
 
 from sqlalchemy import String, Enum, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from models.comment import CommentDao
 from models.base import BaseModel
 
 
@@ -17,8 +17,8 @@ class Roles(enum.Enum):
 
 
 
-class UserDao(BaseModel):
 
+class UserDao(BaseModel):
     __tablename__ = "users"
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
@@ -30,6 +30,8 @@ class UserDao(BaseModel):
     email: Mapped[str] = mapped_column(String(100), unique=True)
     password_hash: Mapped[str] = mapped_column(String(300))
     role: Mapped[Enum] = mapped_column(Enum(Roles))
+    image_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('images.id'), nullable=True)
+
     actions: Mapped[List["ActionDao"]] = relationship(
         "ActionDao", back_populates="user", cascade="all, delete-orphan"
     )
@@ -39,3 +41,11 @@ class UserDao(BaseModel):
     posts: Mapped[List["PostDao"]] = relationship(
         "PostDao", back_populates="author", cascade="all, delete-orphan"
     )
+    image: Mapped["ImageDao"] = relationship(
+        "ImageDao", back_populates="user", cascade="all, delete-orphan", single_parent=True
+    )
+
+    comments: Mapped["CommentDao"] = relationship(
+        back_populates='author'
+    )
+

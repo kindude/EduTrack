@@ -24,6 +24,7 @@ class PostsRepository(BaseRepository):
             selectinload(self.model.module),
             selectinload(self.model.author)
         )
+
         posts = await self.session.execute(stmt_to_select_posts)
         posts = posts.scalars().all()
         posts_info = []
@@ -44,7 +45,7 @@ class PostsRepository(BaseRepository):
         return posts_info
 
     async def get_all_posts(self) -> List[PostInfo]:
-        stmt_to_select_posts = select(self.model).options(
+        stmt_to_select_posts = select(self.model).order_by(self.model.date).options(
             selectinload(self.model.module),
             selectinload(self.model.author)
         )

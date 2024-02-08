@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from api.dependencies import get_users_service
 from api.dependencies_user import get_current_user, validate_token
 from models.user import Roles
+from schemas.images.image_add_request import ImageAddRequest
 
 from schemas.users.user import UserListResponse, UserNotFoundException, \
     UsersNotFoundException, UserInfo, RoleNotFoundException, \
@@ -103,6 +104,13 @@ async def update_user(update_user_: UserUpdateRequest,
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                             detail="User exists" + str(exc)) from exc
 
+
+@router.put('/image', status_code=status.HTTP_200_OK)
+async def update_user_image(image_add_request: ImageAddRequest,user_service: Annotated[UsersService, Depends(get_users_service)]):
+    try:
+        await user_service.add_image(image_add_request=image_add_request)
+    except:
+        pass
 
 @router.delete('/{user_id}', status_code=status.HTTP_200_OK)
 async def delete_user(user_id: uuid.UUID, user_service: Annotated[UsersService, Depends(get_users_service)],

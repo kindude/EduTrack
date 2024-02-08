@@ -1,3 +1,4 @@
+import datetime
 import uuid
 from typing import List
 
@@ -18,10 +19,13 @@ class PostsService:
         try:
             post = post_add.model_dump()
             post["id"] = uuid.uuid4()
+            del post["date"]
+            post["date"] = datetime.datetime.now()
             post = Post.model_validate(post)
             await self.posts_repo.add_post(post)
-        except:
-            pass
+        except Exception as exc:
+            print(exc)
+
 
     async def get_all_posts(self) -> List[PostInfo]:
         return await self.posts_repo.get_all_posts()

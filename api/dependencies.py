@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from repositories.actions_repo import ActionsRepository
 from repositories.days_repository import DaysRepository
+from repositories.images_repo import ImagesRepository
 from repositories.modules import ModulesRepository
 from repositories.db import get_async_session, get_redis_session
 from repositories.posts_repository import PostsRepository
@@ -36,7 +37,8 @@ def get_users_service(session: AsyncSession = Depends(get_async_session)) -> Use
     """
 
     users_repo = UsersRepository(session=session)
-    return UsersService(users_repo=users_repo)
+    images_repo = ImagesRepository(session=session)
+    return UsersService(users_repo=users_repo, images_repo=images_repo)
 
 
 def get_auth_service(session: AsyncSession = Depends(get_async_session),
@@ -82,7 +84,9 @@ def get_actions_service(session: AsyncSession = Depends(get_async_session)) -> A
 
 def get_days_service(session: AsyncSession = Depends(get_async_session)) -> DaysService:
     days_repo = DaysRepository(session=session)
-    return DaysService(days_repo=days_repo)
+    actions_repo = ActionsRepository(session=session)
+
+    return DaysService(days_repo=days_repo, actions_repo=actions_repo)
 
 
 def get_statistics_service(session: AsyncSession = Depends(get_async_session)) -> StatisticsService:

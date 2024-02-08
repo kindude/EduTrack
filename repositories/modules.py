@@ -21,6 +21,7 @@ class ModulesRepository(BaseRepository):
             return []
         modules = [ModuleInfo.model_validate(module) for module in modules]
         return modules
+
     #
     # async def get_module_by_id(self, module_id: uuid) -> Module:
     #     module = await self._get(_id=module_id)

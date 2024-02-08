@@ -1,10 +1,11 @@
 import uuid
 from typing import List, Union
 
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from sqlalchemy.orm import selectinload
 
 from models.action import ActionDao
+from models.user import Roles
 from repositories.base import BaseRepository
 from schemas.actions.action import Action
 from schemas.modules.module_info import ModuleInfo
@@ -41,10 +42,26 @@ class ActionsRepository(BaseRepository):
         return [ModuleInfo.model_validate(action.module) for action in actions]
 
     async def get_action_by_module_id(self, module_id: uuid.UUID) -> Union[UserInfo, str]:
-        stmt_to_select_action = select(ActionDao).options(selectinload(ActionDao.user)).filter(ActionDao.module_id == module_id and ActionDao.role == 'TEACHER').limit(1)
+        stmt_to_select_action = (
+            select(ActionDao)
+            .filter(and_(ActionDao.module_id == module_id, ActionDao.role == 'TEACHER'))
+            .options(selectinload(ActionDao.user))
+        )
+
         action = await self.session.execute(stmt_to_select_action)
         action = action.scalar_one_or_none()
+
         if not action:
             return 'N/A'
+
         user = UserInfo.model_validate(action.user)
         return user
+
+    async def get_module_ids_by_teacher_id(self, teacher_id: uuid.UUID) -> List[uuid.UUID]:
+        stmt_to_select_action_ids = select(ActionDao).filter(and_(ActionDao.user_id == teacher_id, ActionDao.role == Roles.TEACHER))
+        actions = await self.session.execute(stmt_to_select_action_ids)
+        actions_raw = actions.scalars().all()
+        module_ids = [action.module_id for action in actions_raw]
+        return module_ids
+
+

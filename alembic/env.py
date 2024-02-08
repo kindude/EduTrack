@@ -9,7 +9,12 @@ from models.base import Base
 from models.module import ModuleDao
 from models.user import UserDao
 from models.action import ActionDao
+from models.attendance import AttendanceDao
+from models.type_of_mark import TypeOfMarkDao
 from models.day import DayDao
+from models.image import ImageDao
+from models.post import PostDao
+from models.comment import CommentDao
 from settings import DatabaseSettings
 
 settings = DatabaseSettings()

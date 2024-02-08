@@ -1,5 +1,5 @@
 import uuid
-from typing import List
+from typing import List, Union
 
 from fastapi import APIRouter, Depends
 from starlette import status
@@ -21,7 +21,7 @@ async def add_post(post_add: PostAddRequest, posts_service: PostsService = Depen
         pass
 
 @router.get('/{module_id}/feed', status_code=status.HTTP_200_OK)
-async def get_posts(module_id: uuid.UUID, posts_service: PostsService = Depends(get_posts_service)) -> List[PostInfo]:
+async def get_posts(module_id: uuid.UUID, posts_service: PostsService = Depends(get_posts_service)) -> Union[List[PostInfo]]:
     try:
         return await posts_service.get_posts_by_module(module_id)
     except:

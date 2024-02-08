@@ -9,5 +9,4 @@ class UserMarks(BaseSchema):
     id: uuid.UUID
     first_name: str
     last_name: str
-    module_title: str
     days: List[DayInfo]
