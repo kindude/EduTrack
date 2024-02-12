@@ -13,6 +13,7 @@ from starlette import status
 from api.dependencies import get_auth_service
 from schemas.access_token import AccessToken
 from schemas.token import TokenRefreshNotFoundException, TokenExpiredException, TokenCorruptedException
+from schemas.users.UserAuth0 import UserAuth0
 from schemas.users.user import UserAddRequest, UserExistsException, UserLogin, WrongPasswordException, UserNotFoundException
 from services.auth_service import AuthService
 
@@ -80,6 +81,19 @@ async def login_user(auth_service: Annotated[AuthService, Depends(get_auth_servi
     except UserNotFoundException as error:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="User not found" + str(error)) from error
+
+
+@router.post('/login-auth0', status_code=status.HTTP_200_OK)
+async def login_with_auth0(auth_service: Annotated[AuthService, Depends(get_auth_service)], response:Response, user_login: UserAuth0) -> AccessToken:
+    try:
+        tokens_pair = await auth_service.login_with_auth0(user_login)
+        response.set_cookie(key='refresh_token',
+                            value=tokens_pair.refresh_token,
+                            httponly=True)
+        access_token = AccessToken(token=tokens_pair.access_token, type=tokens_pair.type)
+        return access_token
+    except:
+        pass
 
 
 @router.post("/logout", status_code=status.HTTP_200_OK)

@@ -37,7 +37,7 @@ class UsersRepository(BaseRepository):
 
     model = UserDao
 
-    async def add(self, user: User) -> None:
+    async def add(self, user: User) -> User:
         """
         Добавляет нового пользователя в базу данных.
 
@@ -47,6 +47,7 @@ class UsersRepository(BaseRepository):
         """
 
         await self._add(user.model_dump())
+        return user
 
     async def get_all(self) -> UserListResponse:
 
@@ -102,7 +103,7 @@ class UsersRepository(BaseRepository):
         user.role = user.role.value
         return UserInfo.model_validate(user)
 
-    async def get_by_email(self, email: str) -> Union[UserDao, None]:
+    async def get_by_email(self, email: str) -> Union[User, None]:
         """
         Получает данные о пользователе по его адресу электронной почты.
 
@@ -115,7 +116,10 @@ class UsersRepository(BaseRepository):
 
         stmt_to_select_one = select(self.model).filter(self.model.email == email)
         item = await self.session.execute(stmt_to_select_one)
-        return item.scalar_one_or_none()
+        item = item.scalar_one_or_none()
+        if item:
+            return User.model_validate(item)
+
 
     async def update_user(self, user: User) -> None:
         """

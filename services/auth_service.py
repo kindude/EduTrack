@@ -28,6 +28,7 @@ Attributes:
 
 import uuid
 
+from phone_gen import PhoneNumber
 from sqlalchemy.exc import IntegrityError
 
 from constants.http_headers import HttpHeaders
@@ -36,9 +37,11 @@ from models.user import Roles
 from repositories.refresh_token import RefreshTokenRepository
 from repositories.users import UsersRepository
 from schemas.token import TokensPair, TokenCorruptedException
+from schemas.users.UserAuth0 import UserAuth0
 from schemas.users.user import UserAddRequest, User, UserExistsException, UserLogin, UserNotFoundException, \
     WrongPasswordException
 from services.token import JwtProcessorSingleton
+from settings import AppSettings
 
 
 class AuthService:
@@ -59,6 +62,7 @@ class AuthService:
         self.jwt_processor = JwtProcessorSingleton(session=self.users_repo.session)
         self.refresh_token_repo = refresh_token_repo
         self.http_headers = HttpHeaders()
+        self.app_settings = AppSettings()
 
     async def register_user(self, user_add: UserAddRequest) -> None:
         """
@@ -107,12 +111,37 @@ class AuthService:
             user_id=user.id, role=user.role.value)
         refresh_token, refresh_token_id = self.jwt_processor.refresh_jwt_processor.generate(
             user_id=user.id, role=user.role.value)
-        print(refresh_token)
-        print(refresh_token_id)
         await self.refresh_token_repo.save_item(refresh_token_id)
         return TokensPair(access_token=access_token,
                           refresh_token=refresh_token,
                           type="bearer")
+
+    async def login_with_auth0(self, user_to_login: UserAuth0) -> TokensPair:
+        user = await self.users_repo.get_by_email(email=user_to_login.email)
+        if not user:
+
+            user = User(
+                id=uuid.uuid4(),
+                first_name=user_to_login.first_name,
+                last_name=user_to_login.last_name,
+                address='Not Provided',
+                city='Not Provided',
+                phone_number=PhoneNumber("Great Britain").get_number(),
+                email=user_to_login.email,
+                password_hash=self.password_helper.hash_password(self.app_settings.artificial_password),
+                role=Roles.STUDENT
+            )
+
+            user = await self.users_repo.add(user=user)
+        access_token, access_token_id = self.jwt_processor.access_jwt_processor.generate(
+            user_id=user.id, role=user.role.value)
+        refresh_token, refresh_token_id = self.jwt_processor.refresh_jwt_processor.generate(
+            user_id=user.id, role=user.role.value)
+        await self.refresh_token_repo.save_item(refresh_token_id)
+        return TokensPair(access_token=access_token,
+                          refresh_token=refresh_token,
+                          type="bearer")
+
 
     async def logout(self, refresh_token: str) -> None:
         """

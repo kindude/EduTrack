@@ -64,3 +64,8 @@ class PasswordSettings(BaseSettings):
     """
 
     password_salt: str = Field(alias='salt_password')
+
+
+class AppSettings(BaseSettings):
+
+    artificial_password: str
