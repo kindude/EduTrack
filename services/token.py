@@ -61,15 +61,15 @@ class JwtProcessor:
 
     def _generate(self, delta_time_in_s: int, user_id: str, role: str) -> Tuple[str, str]:
         """
-        Генерирует токен аутентификации.
+        Generates authentication token.
 
         Args:
-            delta_time_in_s (int): Время действия токена в секундах.
-            user_id (str): Идентификатор пользователя.
-            role (str): Роль пользователя.
+            delta_time_in_s (int): Token's lifespan.
+            user_id (str): User identifier.
+            role (str): A user's role.
 
         Returns:
-            Tuple[str, str]: Сгенерированный токен и его уникальный идентификатор.
+            Tuple[str, str]: Generated token and its id.
         """
 
         request_tz = 'UTC'

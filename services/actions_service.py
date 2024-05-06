@@ -42,7 +42,7 @@ class ActionsService:
             else:
                 modules_with_lecturer.append(ModuleUsers(
                     module=module,
-                    users='N/A'
+                    users=[]
                 ))
         return modules_with_lecturer
 

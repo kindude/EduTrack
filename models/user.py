@@ -16,8 +16,6 @@ class Roles(enum.Enum):
     MODERATOR = "MODERATOR"
 
 
-
-
 class UserDao(BaseModel):
     __tablename__ = "users"
 

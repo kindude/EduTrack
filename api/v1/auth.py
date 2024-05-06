@@ -24,17 +24,17 @@ router = APIRouter()
 async def register_user(auth_service: Annotated[AuthService, Depends(get_auth_service)],
                         user_add: UserAddRequest) -> int:
     """
-    Регистрирует нового пользователя.
+    Registers a new user.
 
         Args:
-            auth_service (AuthService): Сервис для работы с авторизациями.
-            user_add (UserAddRequest): Данные нового пользователя.
+            auth_service (AuthService): Service to work with authorization.
+            user_add (UserAddRequest): New user data.
 
         Returns:
-            int: Код статуса HTTP 201 Created при успешной регистрации.
+            int: Status code HTTP 201 Created in case of successful registration.
 
         Raises:
-            HTTPException: HTTP 409 Conflict, если пользователь уже существует.
+            HTTPException: HTTP 409 Conflict, if a user exists.
     """
 
     try:

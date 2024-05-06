@@ -1,4 +1,6 @@
-import datetime
+from dateutil.parser import parse
+
+from datetime import datetime, timezone
 import uuid
 from typing import List
 
@@ -20,6 +22,10 @@ class DaysService:
 
     async def add_day(self, day_add: DayAddRequest):
 
+        frontend_datetime = datetime.strptime(day_add.date, "%Y-%m-%dT%H:%M:%S.%fZ")
+
+        formatted_date = frontend_datetime.strftime("%Y-%m-%d %H:%M:%S.%f")
+
         day = Day(
             id=uuid.uuid4(),
             presence=day_add.presence,
@@ -27,7 +33,7 @@ class DaysService:
             type_of_mark=day_add.type_of_mark,
             user_id=day_add.user_id,
             module_id=day_add.module_id,
-            date=datetime.datetime.now()
+            date=formatted_date
         )
 
         await self.days_repo.add_day(day)

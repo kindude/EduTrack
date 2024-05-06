@@ -18,6 +18,11 @@ from settings import PasswordSettings
 settings = PasswordSettings()
 
 
+
+
+
+
+
 class PasswordHelper:
     """
     Инициализирует объект PasswordHelper с заданным значением соли.
@@ -31,13 +36,13 @@ class PasswordHelper:
 
     def hash_password(self, password: str) -> str:
         """
-        Хэширует переданный пароль с использованием соли.
+        Hashing passed password using salt.
 
         Args:
-            password (str): Пароль для хэширования.
+            password (str): Password to hash.
 
         Returns:
-            str: Хэш-значение пароля.
+            str: password hash.
         """
 
         password_hash = str(password) + self.salt

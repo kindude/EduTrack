@@ -59,13 +59,13 @@ class BaseRepository(ABC):
 
     async def _add(self, model: Dict[str, Any]) -> Base:
         """
-        Добавляет запись в базу данных.
+        Adds a new record in the database.
 
         Args:
-            model (Dict[str, Any]): Данные для добавления.
+            model (Dict[str, Any]): Data to add.
 
         Returns:
-            Base: Добавленная запись.
+            Base: Added record.
         """
 
         stmt_to_insert = insert(self.model).values(model).returning(self.model)

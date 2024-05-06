@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 settings = ServerSettings()
 app = FastAPI()
 
-origins = ["http://localhost:3000", "http://localhost:3001"]
+origins = ["http://localhost:3000", "http://localhost:3001", "https://edutrack.duckdns.org", "https://edutrack.duckdns.org"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -41,4 +41,5 @@ if not settings.debug_mode:
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host='0.0.0.0', port=settings.port, reload=True)
+    uvicorn.run("main:app", host='0.0.0.0', port=settings.port, reload=True, ssl_keyfile="key.pem",
+                ssl_certfile="cert.pem")

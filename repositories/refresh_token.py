@@ -51,30 +51,11 @@ class RefreshTokenRepository:
         self._redis = session
 
     async def save_item(self, key: str, value: str = "0") -> None:
-        """
-        Сохраняет элемент в хранилище кэша Redis с указанным ключом и значением.
-
-        Args:
-            key (str): Ключ, по которому элемент будет сохранен в кэше.
-            value (str, optional): Значение элемента (по умолчанию - '0').
-
-        Returns:
-            None
-        """
 
         await self._redis.set(key, value)
         await self._redis.expire(key, settings.refresh_expiration)
 
     async def get_item(self, key: str) -> Union[str, None]:
-        """
-        Получает элемент из хранилища кэша Redis по указанному ключу.
-
-        Args:
-            key (str): Ключ, по которому будет получен элемент из кэша.
-
-        Returns:
-            Union[str, None]: Значение элемента или None, если элемент не найден.
-        """
 
         result = await self._redis.get(key)
         return result

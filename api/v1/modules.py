@@ -8,7 +8,6 @@ from api.dependencies_user import validate_token
 from models.user import Roles
 from schemas.modules.module_add_request import ModuleAddRequest
 from schemas.modules.module_exceptions import ModuleExistsException
-from schemas.modules.module_info import ModuleInfo
 from schemas.modules.module_users import ModuleUsers
 
 from schemas.users.user import UserRole

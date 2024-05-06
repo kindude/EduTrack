@@ -34,6 +34,3 @@ async def get_all_posts(posts_service: PostsService = Depends(get_posts_service)
         return await posts_service.get_all_posts()
     except:
         pass
-
-
-
